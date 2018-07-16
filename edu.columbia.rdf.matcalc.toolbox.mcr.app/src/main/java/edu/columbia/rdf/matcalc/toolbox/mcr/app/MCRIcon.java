@@ -5,6 +5,6 @@ import org.jebtk.modern.graphics.icons.ModernApplicationIcon;
 
 public class MCRIcon extends ModernApplicationIcon {
   public MCRIcon() {
-    super("P", "r", ColorTheme.ORANGE);
+    super("M", "c", ColorTheme.ORANGE);
   }
 }

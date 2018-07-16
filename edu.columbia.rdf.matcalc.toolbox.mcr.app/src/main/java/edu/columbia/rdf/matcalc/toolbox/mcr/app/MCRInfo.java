@@ -40,7 +40,7 @@ public class MCRInfo extends GuiAppInfo {
    * Instantiates a new pathway info.
    */
   public MCRInfo() {
-    super("Probes", new AppVersion(1), "Copyright (C) 2016 Antony Holmes",
+    super("MCR", new AppVersion(1), "Copyright (C) 2018 Antony Holmes",
         AssetService.getInstance().loadIcon(MCRIcon.class, 32),
         AssetService.getInstance().loadIcon(MCRIcon.class, 128));
   }
