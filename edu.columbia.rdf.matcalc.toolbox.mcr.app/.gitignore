@@ -1,0 +1,9 @@
+/bin/
+.metadata
+/tmp/
+/cache/
+/.settings
+/target/
+/*log*
+/.classpath
+/res/
