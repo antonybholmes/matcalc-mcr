@@ -25,41 +25,45 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package edu.columbia.rdf.matcalc.toolbox.mcr.app;
+package edu.columbia.rdf.matcalc.toolbox.mcr;
 
-import java.awt.FontFormatException;
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
-import javax.swing.UnsupportedLookAndFeelException;
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.jebtk.core.AppService;
-import org.jebtk.modern.ColorTheme;
-import org.jebtk.modern.theme.ThemeService;
-import org.xml.sax.SAXException;
-
-import edu.columbia.rdf.matcalc.MainMatCalc;
-import edu.columbia.rdf.matcalc.BasicModuleLoader;
-import edu.columbia.rdf.matcalc.bio.BioModuleLoader;
-import edu.columbia.rdf.matcalc.toolbox.mcr.MCRModule;
+import org.jebtk.bioinformatics.genomic.Chromosome;
+import org.jebtk.bioinformatics.genomic.GenomicRegion;
 
 /**
- * The class MainPathway.
+ * The class ConsensusRegion.
  */
-public class MainMCR {
+public class ConsensusRegion extends GenomicRegion {
+	
+  /**
+	 * The gain.
+	 */
+	boolean gain;
 
-  public static final void main(String[] args) throws FontFormatException,
-      IOException, SAXException, ParserConfigurationException,
-      ClassNotFoundException, InstantiationException, IllegalAccessException,
-      UnsupportedLookAndFeelException {
-    AppService.getInstance().setAppInfo("mcr");
+	/**
+	 * The ids.
+	 */
+	private List<String> mIds = new ArrayList<String>();
 
-    ThemeService.getInstance().setTheme(ColorTheme.ORANGE);
+	public ConsensusRegion(Chromosome chr, int start, int end) {
+    super(chr, start, end);
+  }
+	
+	public ConsensusRegion(GenomicRegion r) {
+    super(r);
+	}
 
-    BasicModuleLoader ml = new BioModuleLoader();
+  public Collection<String> getIds() {
+	  return mIds;
+	}
 
-    ml.addModule(MCRModule.class);
-
-    MainMatCalc.main(new MCRInfo(), ml);
+  public ConsensusRegion addIds(Collection<String> ids) {
+    getIds().addAll(ids);
+    
+    return this;
   }
 }

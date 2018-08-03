@@ -28,16 +28,22 @@
 package edu.columbia.rdf.matcalc.toolbox.mcr;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map.Entry;
 
-import org.jebtk.bioinformatics.ext.ucsc.ChipFile;
-import org.jebtk.bioinformatics.genomic.ProbeGene;
-import org.jebtk.core.io.PathUtils;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.jebtk.bioinformatics.genomic.Chromosome;
+import org.jebtk.bioinformatics.genomic.GenomicRegion;
+import org.jebtk.bioinformatics.search.Feature;
+import org.jebtk.core.collections.DefaultHashMap;
+import org.jebtk.core.collections.IterMap;
+import org.jebtk.core.collections.UniqueArrayListCreator;
 import org.jebtk.core.text.TextUtils;
 import org.jebtk.math.matrix.DataFrame;
+import org.jebtk.math.matrix.Matrix;
 import org.jebtk.modern.AssetService;
-import org.jebtk.modern.dialog.ModernMessageDialog;
 import org.jebtk.modern.event.ModernClickEvent;
 import org.jebtk.modern.event.ModernClickListener;
 import org.jebtk.modern.ribbon.RibbonLargeButton;
@@ -53,14 +59,15 @@ import edu.columbia.rdf.matcalc.toolbox.mcr.app.MCRIcon;
  *
  */
 public class MCRModule extends CalcModule implements ModernClickListener {
+  
+  private static final String[] COL_NAMES = 
+    {"Genomic Location", "Number of Samples", "Segment Ids"};
 
   /**
    * The member convert button.
    */
-  private RibbonLargeButton mConvertButton = new RibbonLargeButton("Probes",
+  private RibbonLargeButton mConvertButton = new RibbonLargeButton("MCR",
       AssetService.getInstance().loadIcon(MCRIcon.class, 24));
-
-  public static final Path DIR = PathUtils.getPath("res/modules/probes");
 
   /**
    * The member window.
@@ -74,7 +81,7 @@ public class MCRModule extends CalcModule implements ModernClickListener {
    */
   @Override
   public String getName() {
-    return "Probes";
+    return "Minimal Common Regions";
   }
 
   /*
@@ -89,7 +96,7 @@ public class MCRModule extends CalcModule implements ModernClickListener {
     mWindow = window;
 
     // home
-    mWindow.getRibbon().getToolbar("Bioinformatics").getSection("Probes")
+    mWindow.getRibbon().getToolbar("Genomic").getSection("Regions")
         .add(mConvertButton);
 
     mConvertButton.addClickListener(this);
@@ -104,61 +111,121 @@ public class MCRModule extends CalcModule implements ModernClickListener {
    */
   @Override
   public final void clicked(ModernClickEvent e) {
-    try {
-      mapProbes();
-    } catch (IOException e1) {
-      e1.printStackTrace();
-    }
+    run();
+  }
+  
+  public final void run() {
+    DataFrame ret = run(mWindow.getCurrentMatrix());
+    
+    mWindow.addToHistory("MCR", ret);
   }
 
-  private void mapProbes() throws IOException {
-    DataFrame m = mWindow.getCurrentMatrix();
+  public final DataFrame run(Matrix m) {
+    IterMap<Chromosome, List<ConsensusRegion>> consensusRegions = 
+        mcr(m);
 
-    int c = mWindow.getSelectedColumn();
+    int rows = 0;
 
-    if (c == Integer.MIN_VALUE) {
-      ModernMessageDialog.createWarningDialog(mWindow,
-          "You must select a column of probe ids.");
-
-      return;
+    for (Entry<Chromosome, List<ConsensusRegion>> chr : consensusRegions.entrySet()) {
+      rows += chr.getValue().size();
     }
 
-    System.err.println("c " + c);
+    DataFrame ret = DataFrame.createMixedMatrix(rows, 3);
 
-    ProbesDialog dialog = new ProbesDialog(mWindow);
+    ret.setColumnNames(COL_NAMES);
 
-    dialog.setVisible(true);
 
-    if (dialog.isCancelled()) {
-      return;
-    }
+    int row = 0;
 
-    Path file = dialog.getFile();
+    for (Entry<Chromosome, List<ConsensusRegion>> c : consensusRegions.entrySet()) {
 
-    int cols = m.getCols();
+      // get positions in order
+      Collections.sort(c.getValue());
 
-    DataFrame m2 = DataFrame.createDataFrame(m.getRows(), cols + 2);
+      for (ConsensusRegion cr : c.getValue()) {
+        ret.set(row, 0, cr.getLocation());
+        ret.set(row, 1, cr.getIds().size());
+        ret.set(row, 2, TextUtils.join(cr.getIds(), TextUtils.SEMI_COLON_DELIMITER));
 
-    DataFrame.copyColumns(m, m2);
+        ++row;
 
-    // load the chip map
-    Map<String, ProbeGene> probeGeneMap = ChipFile.parseChipFile(file);
-
-    for (int i = 0; i < m.getRows(); ++i) {
-      String name = m.getText(i, c);
-
-      if (probeGeneMap.containsKey(name)) {
-        m2.set(i, cols, probeGeneMap.get(name).getGeneSymbol());
-        m2.set(i, cols + 1, probeGeneMap.get(name).getDescription());
-      } else {
-        m2.set(i, cols, TextUtils.NA);
-        m2.set(i, cols + 1, TextUtils.NA);
       }
     }
 
-    m2.setColumnName(cols, "Gene Symbol");
-    m2.setColumnName(cols + 1, "Description");
+    return ret;
+  }
 
-    mWindow.addToHistory("Probes to genes", m2);
+  /**
+   * Mcr.
+   *
+   * @param gain the gain
+   * @param loss the loss
+   * @param gainMode the gain mode
+   * @param consensusRegions the consensus regions
+   * @return 
+   * @throws InvalidFormatException the invalid format exception
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
+  private static final IterMap<Chromosome, List<ConsensusRegion>> mcr(Matrix m) {
+    //List<String> tokens;
+
+    IterMap<Chromosome, List<ConsensusRegion>> ret = 
+        DefaultHashMap.create(new UniqueArrayListCreator<ConsensusRegion>());
+
+    IterMap<Chromosome, List<Feature>> features = 
+        DefaultHashMap.create(new UniqueArrayListCreator<Feature>());
+
+    for (int r = 0; r < m.getRows(); ++r) {
+
+      Feature feature = new Feature(m.getText(r, 0),
+          new Chromosome(m.getText(r, 1)),
+          m.getInt(r, 2),
+          m.getInt(r, 3));
+
+      features.get(feature.getChr()).add(feature);
+
+      // add non duplicate starts and ends
+    }
+
+    for (Entry<Chromosome, List<Feature>> cf : features.entrySet()) {
+      // sort the positions
+      Collections.sort(cf.getValue());
+    }
+    
+    GenomicRegion mcr;
+    GenomicRegion overlap;
+    List<String> ids = new ArrayList<String>();;
+    // Determine the mcrs
+    
+
+    for (Entry<Chromosome, List<Feature>> cf : features.entrySet()) {
+      for (Feature f1 : cf.getValue()) {
+        
+        // Start an mcr from every feature
+        mcr = f1;
+        
+        ids.clear();
+        ids.add(f1.getName());
+        mcr = f1;
+        
+        for (Feature f2 : cf.getValue()) {
+          if (f1.equals(f2)) {
+            continue;
+          }
+          
+          overlap = GenomicRegion.overlap(mcr, f1);
+          
+          if (overlap != null) {
+            ids.add(f1.getName());
+            mcr = overlap;
+          } 
+        }
+        
+        // If the mcr is a duplicate, it will be ignored.
+        ret.get(cf.getKey()).add(new ConsensusRegion(mcr).addIds(ids));
+      }
+    }
+
+    return ret;
   }
 }
