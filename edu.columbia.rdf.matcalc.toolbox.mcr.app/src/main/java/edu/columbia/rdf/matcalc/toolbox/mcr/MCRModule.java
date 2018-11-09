@@ -178,7 +178,7 @@ public class MCRModule extends CalcModule implements ModernClickListener {
     for (int r = 0; r < m.getRows(); ++r) {
 
       Feature feature = new Feature(m.getText(r, 0),
-          new Chromosome(m.getText(r, 1)),
+          Chromosome.newChr(m.getText(r, 1)),
           m.getInt(r, 2),
           m.getInt(r, 3));
 
