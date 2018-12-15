@@ -49,7 +49,7 @@ import org.jebtk.modern.event.ModernClickListener;
 import org.jebtk.modern.ribbon.RibbonLargeButton;
 
 import edu.columbia.rdf.matcalc.MainMatCalcWindow;
-import edu.columbia.rdf.matcalc.toolbox.CalcModule;
+import edu.columbia.rdf.matcalc.toolbox.Module;
 import edu.columbia.rdf.matcalc.toolbox.mcr.app.MCRIcon;
 
 /**
@@ -58,7 +58,7 @@ import edu.columbia.rdf.matcalc.toolbox.mcr.app.MCRIcon;
  * @author Antony Holmes Holmes
  *
  */
-public class MCRModule extends CalcModule implements ModernClickListener {
+public class MCRModule extends Module implements ModernClickListener {
   
   private static final String[] COL_NAMES = 
     {"Genomic Location", "Number of Samples", "Segment Ids"};
@@ -117,7 +117,7 @@ public class MCRModule extends CalcModule implements ModernClickListener {
   public final void run() {
     DataFrame ret = run(mWindow.getCurrentMatrix());
     
-    mWindow.addToHistory("MCR", ret);
+    mWindow.history().addToHistory("MCR", ret);
   }
 
   public final DataFrame run(Matrix m) {
