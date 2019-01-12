@@ -55,7 +55,7 @@ import edu.columbia.rdf.matcalc.toolbox.mcr.app.MCRIcon;
 /**
  * Map probes to genes.
  *
- * @author Antony Holmes Holmes
+ * @author Antony Holmes
  *
  */
 public class MCRModule extends Module implements ModernClickListener {
