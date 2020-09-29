@@ -41,7 +41,6 @@ public class MCRInfo extends GuiAppInfo {
    */
   public MCRInfo() {
     super("MCR", new AppVersion(1), "Copyright (C) 2018 Antony Holmes",
-        AssetService.getInstance().loadIcon(MCRIcon.class, 32),
         AssetService.getInstance().loadIcon(MCRIcon.class, 128));
   }
 

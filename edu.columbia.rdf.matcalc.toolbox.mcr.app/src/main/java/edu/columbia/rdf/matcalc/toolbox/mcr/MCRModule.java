@@ -35,6 +35,7 @@ import java.util.Map.Entry;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.jebtk.bioinformatics.genomic.Chromosome;
+import org.jebtk.bioinformatics.genomic.Genome;
 import org.jebtk.bioinformatics.genomic.GenomicRegion;
 import org.jebtk.bioinformatics.search.Feature;
 import org.jebtk.core.collections.DefaultHashMap;
@@ -178,6 +179,7 @@ public class MCRModule extends Module implements ModernClickListener {
     for (int r = 0; r < m.getRows(); ++r) {
 
       Feature feature = new Feature(m.getText(r, 0),
+          Genome.NO_GENOME,
           Chromosome.newChr(m.getText(r, 1)),
           m.getInt(r, 2),
           m.getInt(r, 3));
