@@ -35,7 +35,6 @@ import java.util.Map.Entry;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.jebtk.bioinformatics.genomic.Chromosome;
-import org.jebtk.bioinformatics.genomic.Genome;
 import org.jebtk.bioinformatics.genomic.GenomicRegion;
 import org.jebtk.bioinformatics.search.Feature;
 import org.jebtk.core.collections.DefaultHashMap;
@@ -60,9 +59,8 @@ import edu.columbia.rdf.matcalc.toolbox.mcr.app.MCRIcon;
  *
  */
 public class MCRModule extends Module implements ModernClickListener {
-  
-  private static final String[] COL_NAMES = 
-    {"Genomic Location", "Number of Samples", "Segment Ids"};
+
+  private static final String[] COL_NAMES = { "Genomic Location", "Number of Samples", "Segment Ids" };
 
   /**
    * The member convert button.
@@ -88,8 +86,7 @@ public class MCRModule extends Module implements ModernClickListener {
   /*
    * (non-Javadoc)
    * 
-   * @see
-   * edu.columbia.rdf.apps.matcalc.modules.Module#init(edu.columbia.rdf.apps.
+   * @see edu.columbia.rdf.apps.matcalc.modules.Module#init(edu.columbia.rdf.apps.
    * matcalc.MainMatCalcWindow)
    */
   @Override
@@ -97,8 +94,7 @@ public class MCRModule extends Module implements ModernClickListener {
     mWindow = window;
 
     // home
-    mWindow.getRibbon().getToolbar("Genomic").getSection("Regions")
-        .add(mConvertButton);
+    mWindow.getRibbon().getToolbar("Genomic").getSection("Regions").add(mConvertButton);
 
     mConvertButton.addClickListener(this);
   }
@@ -106,24 +102,22 @@ public class MCRModule extends Module implements ModernClickListener {
   /*
    * (non-Javadoc)
    * 
-   * @see
-   * org.abh.lib.ui.modern.event.ModernClickListener#clicked(org.abh.lib.ui.
+   * @see org.abh.lib.ui.modern.event.ModernClickListener#clicked(org.abh.lib.ui.
    * modern .event.ModernClickEvent)
    */
   @Override
   public final void clicked(ModernClickEvent e) {
     run();
   }
-  
+
   public final void run() {
     DataFrame ret = run(mWindow.getCurrentMatrix());
-    
+
     mWindow.history().addToHistory("MCR", ret);
   }
 
   public final DataFrame run(Matrix m) {
-    IterMap<Chromosome, List<ConsensusRegion>> consensusRegions = 
-        mcr(m);
+    IterMap<Chromosome, List<ConsensusRegion>> consensusRegions = mcr(m);
 
     int rows = 0;
 
@@ -134,7 +128,6 @@ public class MCRModule extends Module implements ModernClickListener {
     DataFrame ret = DataFrame.createMixedMatrix(rows, 3);
 
     ret.setColumnNames(COL_NAMES);
-
 
     int row = 0;
 
@@ -159,29 +152,25 @@ public class MCRModule extends Module implements ModernClickListener {
   /**
    * Mcr.
    *
-   * @param gain the gain
-   * @param loss the loss
-   * @param gainMode the gain mode
+   * @param gain             the gain
+   * @param loss             the loss
+   * @param gainMode         the gain mode
    * @param consensusRegions the consensus regions
-   * @return 
+   * @return
    * @throws InvalidFormatException the invalid format exception
-   * @throws IOException Signals that an I/O exception has occurred.
+   * @throws IOException            Signals that an I/O exception has occurred.
    */
   private static final IterMap<Chromosome, List<ConsensusRegion>> mcr(Matrix m) {
-    //List<String> tokens;
+    // List<String> tokens;
 
-    IterMap<Chromosome, List<ConsensusRegion>> ret = 
-        DefaultHashMap.create(new UniqueArrayListCreator<ConsensusRegion>());
+    IterMap<Chromosome, List<ConsensusRegion>> ret = DefaultHashMap
+        .create(new UniqueArrayListCreator<ConsensusRegion>());
 
-    IterMap<Chromosome, List<Feature>> features = 
-        DefaultHashMap.create(new UniqueArrayListCreator<Feature>());
+    IterMap<Chromosome, List<Feature>> features = DefaultHashMap.create(new UniqueArrayListCreator<Feature>());
 
     for (int r = 0; r < m.getRows(); ++r) {
 
-      Feature feature = new Feature(m.getText(r, 0),
-          Genome.NO_GENOME,
-          Chromosome.newChr(m.getText(r, 1)),
-          m.getInt(r, 2),
+      Feature feature = new Feature(m.getText(r, 0), Chromosome.newChr(m.getText(r, 1)), m.getInt(r, 2),
           m.getInt(r, 3));
 
       features.get(feature.getChr()).add(feature);
@@ -193,36 +182,36 @@ public class MCRModule extends Module implements ModernClickListener {
       // sort the positions
       Collections.sort(cf.getValue());
     }
-    
+
     GenomicRegion mcr;
     GenomicRegion overlap;
-    List<String> ids = new ArrayList<String>();;
+    List<String> ids = new ArrayList<String>();
+    ;
     // Determine the mcrs
-    
 
     for (Entry<Chromosome, List<Feature>> cf : features.entrySet()) {
       for (Feature f1 : cf.getValue()) {
-        
+
         // Start an mcr from every feature
         mcr = f1;
-        
+
         ids.clear();
         ids.add(f1.getName());
         mcr = f1;
-        
+
         for (Feature f2 : cf.getValue()) {
           if (f1.equals(f2)) {
             continue;
           }
-          
+
           overlap = GenomicRegion.overlap(mcr, f1);
-          
+
           if (overlap != null) {
             ids.add(f1.getName());
             mcr = overlap;
-          } 
+          }
         }
-        
+
         // If the mcr is a duplicate, it will be ignored.
         ret.get(cf.getKey()).add(new ConsensusRegion(mcr).addIds(ids));
       }

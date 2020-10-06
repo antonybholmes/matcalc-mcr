@@ -38,32 +38,32 @@ import org.jebtk.bioinformatics.genomic.GenomicRegion;
  * The class ConsensusRegion.
  */
 public class ConsensusRegion extends GenomicRegion {
-	
+
   /**
-	 * The gain.
-	 */
-	boolean gain;
+   * The gain.
+   */
+  boolean gain;
 
-	/**
-	 * The ids.
-	 */
-	private List<String> mIds = new ArrayList<String>();
+  /**
+   * The ids.
+   */
+  private List<String> mIds = new ArrayList<String>();
 
-	public ConsensusRegion(Chromosome chr, int start, int end) {
+  public ConsensusRegion(Chromosome chr, int start, int end) {
     super(chr, start, end);
   }
-	
-	public ConsensusRegion(GenomicRegion r) {
+
+  public ConsensusRegion(GenomicRegion r) {
     super(r);
-	}
+  }
 
   public Collection<String> getIds() {
-	  return mIds;
-	}
+    return mIds;
+  }
 
   public ConsensusRegion addIds(Collection<String> ids) {
     getIds().addAll(ids);
-    
+
     return this;
   }
 }

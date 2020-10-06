@@ -48,10 +48,9 @@ import edu.columbia.rdf.matcalc.toolbox.mcr.MCRModule;
  */
 public class MainMCR {
 
-  public static final void main(String[] args) throws FontFormatException,
-      IOException, SAXException, ParserConfigurationException,
-      ClassNotFoundException, InstantiationException, IllegalAccessException,
-      UnsupportedLookAndFeelException {
+  public static final void main(String[] args)
+      throws FontFormatException, IOException, SAXException, ParserConfigurationException, ClassNotFoundException,
+      InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException {
     AppService.getInstance().setAppInfo("mcr");
 
     ThemeService.getInstance().setTheme(ColorTheme.ORANGE);
